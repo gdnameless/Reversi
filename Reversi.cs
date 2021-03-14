@@ -4,7 +4,7 @@ using System.Drawing;
 
 namespace Reversi
 {
-    class Reversi
+    public class Reversi
     {
         public bool Turn { get; private set; }
 
@@ -56,10 +56,11 @@ namespace Reversi
                 Finished = false;
         }
 
-        public void MakeMove(int X, int Y)
+        // returns whether the move was valid or not
+        public bool MakeMove(int X, int Y)
         {
             if (Finished || board[X, Y] != null || !validmoves.Contains((X, Y)))
-                return;
+                return false;
 
             board[X, Y] = Turn;
 
@@ -102,6 +103,8 @@ namespace Reversi
                 Finished = true;
                 DetermineWinner();
             }
+
+            return true;
         }
 
         void DetermineWinner()
