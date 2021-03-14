@@ -1,0 +1,7 @@
+C:\Users\ziaal\source\repos\Reversi\bin\Debug\Reversi.exe.config
+C:\Users\ziaal\source\repos\Reversi\bin\Debug\Reversi.exe
+C:\Users\ziaal\source\repos\Reversi\bin\Debug\Reversi.pdb
+C:\Users\ziaal\source\repos\Reversi\obj\Debug\Reversi.csprojAssemblyReference.cache
+C:\Users\ziaal\source\repos\Reversi\obj\Debug\Reversi.csproj.CoreCompileInputs.cache
+C:\Users\ziaal\source\repos\Reversi\obj\Debug\Reversi.exe
+C:\Users\ziaal\source\repos\Reversi\obj\Debug\Reversi.pdb
