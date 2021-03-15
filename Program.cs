@@ -11,50 +11,33 @@ namespace Reversi
             Console.Title = "Reversi";
             Reversi game = new Reversi();
             Random r = new Random();
-            (int Black, int White, int Draw) = (0, 0, 0);
-            int games = 10000;
+            int images = 10;
             Stopwatch sw = new Stopwatch();
-            for (int i = 0; i < 20; i++)
+            sw.Start();
+            int width = 0, height = 0;
+            for (int i = 0; i < images;)
             {
+                if (game.Finished)
+                {
+                    Bitmap image = game.CreateImage();
+                    image.Save($"test{width}-{height}.png");
+                    i++;
+                    width = r.Next(3, 16);
+                    height = r.Next(3, 16);
+                    bool?[,] newboard = new bool?[width, height];
+                    int w = width / 2, h = height / 2;
+                    newboard[w, h] = true;
+                    newboard[w + 1, h] = false;
+                    newboard[w, h + 1] = false;
+                    newboard[w + 1, h + 1] = true;
+                    game.SetStartingBoard(newboard);
+                    game.Reset();
+                }
                 (int X, int Y) = game.ValidMoves[r.Next(game.ValidMoves.Length)];
                 game.MakeMove(X, Y);
             }
-            sw.Start();
-            /*Bitmap image = game.CreateImage();
-            image.Save("test.png");
-            image.Dispose();
             sw.Stop();
-            Console.WriteLine($"Board position:");
-            game.PrintBoard();
-            Console.WriteLine($"Generating, saving and disposing image finished in {sw.Elapsed}s");
-            Console.ReadKey();*/
-            for (int i = 0; i < games; i++)
-            {
-                game.Reset();
-                //Console.Clear();
-                //game.PrintBoard();
-                while (!game.Finished)
-                {
-                    //Console.ReadKey();
-                    (int X, int Y) = game.ValidMoves[r.Next(game.ValidMoves.Length)];
-                    game.MakeMove(X, Y);
-                    //Console.SetCursorPosition(0, 0);
-                    //game.PrintBoard();
-                    /*Bitmap image = game.CreateImage();
-                    image.Save("test.png");
-                    image.Dispose();*/
-                }
-                if (game.Winner == true)
-                    Black++;
-                else if (game.Winner == false)
-                    White++;
-                else
-                    Draw++;
-                //Console.WriteLine($"Winner: {(game.Winner == true ? "Black" : game.Winner == false ? "White" : "Draw")}");
-                //Console.ReadKey();
-            }
-            sw.Stop();
-            Console.WriteLine($"{games} Reversi Random Move Games:\nBlack won {Black} times\nWhite won {White} times\n{Draw} games were drawn\nfinished in {sw.Elapsed}s");
+            Console.WriteLine($"{images} images generated in {sw.Elapsed}s (avg. {(float)sw.ElapsedMilliseconds / images}ms)");
             Console.ReadKey();
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 
 namespace Reversi
 {
@@ -42,6 +43,7 @@ namespace Reversi
 
         public void Reset()
         {
+
             board = (bool?[,])startingboard.Clone();
             width = board.GetLength(0);
             height = board.GetLength(1);
@@ -187,18 +189,84 @@ namespace Reversi
 
         const int size = 64;
         readonly int halfsize = size / 2;
+        readonly int sizeminusone = size - 1;
         readonly Pen p = new Pen(Color.Black, 1);
         readonly SolidBrush brush = new SolidBrush(Color.Black);
         readonly Font f = new Font(FontFamily.GenericSansSerif, 22, FontStyle.Bold);
         readonly Color validmoveb = Color.FromArgb(127, 0, 0, 0), validmovew = Color.FromArgb(127, 255, 255, 255);
+        Bitmap image, background;
+        Graphics g;
+        int lastw = 0, lasth = 0;
         public Bitmap CreateImage()
         {
             int w = width + 1, h = height + 1;
-            Bitmap b = new Bitmap(w * size, h * size);
-            Graphics g = Graphics.FromImage(b);
-            g.Clear(Color.White);
-            brush.Color = Color.FromArgb(135, 199, 255);
-            g.FillRectangle(brush, size, size, w * size, h * size);
+            if (lastw != width || lasth != height || image != null /* in case the image gets disposed from outside */)
+            {
+                if (image != null)
+                {
+                    image.Dispose();
+                    background.Dispose();
+                    g.Dispose();
+                }
+                background = new Bitmap(width * size, height * size);
+                g = Graphics.FromImage(background);
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.Clear(Color.FromArgb(135, 199, 255));
+
+                // draw vertical lines
+                brush.Color = Color.Black;
+                int drawy = height * size;
+                for (int x = 1; x <= width; x++)
+                    g.DrawLine(p, x * size - 1, 0, x * size - 1, drawy);
+
+                // draw horizontal lines
+                int drawx = width * size;
+                for (int y = 1; y <= height; y++)
+                    g.DrawLine(p, 0, y * size - 1, drawx, y * size - 1);
+
+                g.Dispose();
+
+                image = new Bitmap(w * size, h * size);
+                g = Graphics.FromImage(image);
+                g.Clear(Color.White);
+                g.SmoothingMode = SmoothingMode.HighQuality;
+
+                // draw vertical lines and column text
+                drawy += sizeminusone;
+                for (int x = 1; x <= w; x++)
+                {
+                    drawx = x * size - 1;
+                    g.DrawLine(p, drawx, 0, drawx, drawy);
+                    if (x == 1)
+                        continue;
+                    string text = (x - 1).ToString();
+                    SizeF textsize = g.MeasureString(text, f);
+                    g.DrawString(text, f, brush, drawx - halfsize - textsize.Width / 2, halfsize - textsize.Height / 2);
+                }
+
+                // draw horizontal lines and row text
+                drawx += sizeminusone;
+                for (int y = 1; y <= h; y++)
+                {
+                    drawy = y * size - 1;
+                    g.DrawLine(p, 0, drawy, drawx, drawy);
+                    if (y == 1)
+                        continue;
+                    string text = (y - 1).ToString();
+                    SizeF textsize = g.MeasureString(text, f);
+                    g.DrawString(text, f, brush, halfsize - textsize.Width / 2, drawy - halfsize - textsize.Height / 2);
+                }
+
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+
+                lastw = width;
+                lasth = height;
+            }
+
+            // apply the background to the main image
+            g.DrawImage(background, size, size);
+
+            Color validmovecolor = Turn ? validmoveb : validmovew;
 
             // draw disks
             for (int x = 0; x < width; x++)
@@ -206,42 +274,15 @@ namespace Reversi
                     if (board[x, y] != null)
                     {
                         brush.Color = board[x, y] == true ? Color.Black : Color.White;
-                        g.FillEllipse(brush, (x + 1) * size - 1, (y + 1) * size - 1, size, size);
+                        g.FillEllipse(brush, (x + 1) * size, (y + 1) * size, sizeminusone, sizeminusone);
                     }
                     else if (validmoves.Contains((x, y)))
                     {
-                        brush.Color = Turn ? validmoveb : validmovew;
-                        g.FillEllipse(brush, (x + 1) * size - 1, (y + 1) * size - 1, size, size);
+                        brush.Color = validmovecolor;
+                        g.FillEllipse(brush, (x + 1) * size, (y + 1) * size, sizeminusone, sizeminusone);
                     }
 
-            // draw vertical lines and column text
-            brush.Color = Color.Black;
-            int drawx, drawy = h * size;
-            for (int x = 1; x <= w; x++)
-            {
-                drawx = x * size - 1;
-                g.DrawLine(p, drawx, 0, drawx, drawy);
-                if (x == 1)
-                    continue;
-                string text = (x - 1).ToString();
-                SizeF textsize = g.MeasureString(text, f);
-                g.DrawString(text, f, brush, drawx - halfsize - textsize.Width / 2, halfsize - textsize.Height / 2);
-            }
-
-            // draw horizontal lines and row text
-            drawx = w * size;
-            for (int y = 1; y <= h; y++)
-            {
-                drawy = y * size - 1;
-                g.DrawLine(p, 0, drawy, drawx, drawy);
-                if (y == 1)
-                    continue;
-                string text = (y - 1).ToString();
-                SizeF textsize = g.MeasureString(text, f);
-                g.DrawString(text, f, brush, halfsize - textsize.Width / 2, drawy - halfsize - textsize.Height / 2);
-            }
-            g.Dispose();
-            return b;
+            return image;
         }
     }
 }
