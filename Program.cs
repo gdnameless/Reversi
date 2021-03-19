@@ -8,37 +8,48 @@ namespace Reversi
     {
         static void Main(string[] args)
         {
-            Console.Title = "Reversi";
-            Reversi game = new Reversi();
-            Random r = new Random();
-            int images = 10;
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
-            int width = 0, height = 0;
-            for (int i = 0; i < images;)
+            /*Console.Title = "Reversi";
+            Reversi Game = new Reversi();
+            BotABPruning BotAlpha = new BotABPruning(Game);
+            Stopwatch movetime = new Stopwatch();
+            (int Black, int White) Depth = (4, 3);
+            (int Black, int White, int Draws) Wins = (0, 0, 0);
+            while (true)
             {
-                if (game.Finished)
+                while (!Game.Finished)
                 {
-                    Bitmap image = game.CreateImage();
-                    image.Save($"test{width}-{height}.png");
-                    i++;
-                    width = r.Next(3, 16);
-                    height = r.Next(3, 16);
-                    bool?[,] newboard = new bool?[width, height];
-                    int w = width / 2, h = height / 2;
-                    newboard[w, h] = true;
-                    newboard[w + 1, h] = false;
-                    newboard[w, h + 1] = false;
-                    newboard[w + 1, h + 1] = true;
-                    game.SetStartingBoard(newboard);
-                    game.Reset();
+                    int depth = Game.Turn ? Depth.Black : Depth.White;
+                    BotAlpha.SetDepth(depth);
+                    movetime.Reset();
+                    movetime.Start();
+                    (int X, int Y) Move = BotAlpha.RequestMove();
+                    movetime.Stop();
+                    Game.MakeMove(Move);
+                    Console.Clear();
+                    Game.PrintBoard();
+                    Console.WriteLine($"{(!Game.Turn ? "Black" : "White")}'s move: {Move} (depth: {depth} time: {movetime.Elapsed}s)");
+                    Console.WriteLine($"Eval: {BotAlpha.Eval}\nNodes visited: {BotAlpha.NodesVisited}\nPrunes: {BotAlpha.Pruned}");
+                    Console.ReadKey();
                 }
-                (int X, int Y) = game.ValidMoves[r.Next(game.ValidMoves.Length)];
-                game.MakeMove(X, Y);
-            }
-            sw.Stop();
-            Console.WriteLine($"{images} images generated in {sw.Elapsed}s (avg. {(float)sw.ElapsedMilliseconds / images}ms)");
-            Console.ReadKey();
+                if (Game.Winner == null)
+                {
+                    Wins.Draws++;
+                }
+                else if (Game.Winner == true)
+                {
+                    Wins.Black++;
+                }
+                else
+                {
+                    Wins.White++;
+                }
+                if (Game.Winner != null)
+                    Console.WriteLine($"{(Game.Winner == true ? "Black" : "White")} won!");
+                else
+                    Console.WriteLine("It's a tie!");
+                Console.ReadKey();
+                Game.Reset();
+            }*/
         }
     }
 }

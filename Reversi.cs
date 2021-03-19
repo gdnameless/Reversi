@@ -41,6 +41,12 @@ namespace Reversi
             Reset();
         }
 
+        public delegate void NotifyGameReset();
+        public event NotifyGameReset GameReset;
+
+        protected virtual void OnGameReset()
+            => GameReset?.Invoke();
+
         public void Reset()
         {
 
@@ -56,9 +62,20 @@ namespace Reversi
             }
             else
                 Finished = false;
+
+            OnGameReset();
         }
 
+        public delegate void NotifyMoveMade(int X, int Y);
+        public event NotifyMoveMade MoveMade;
+
+        protected virtual void OnMoveMade(int X, int Y)
+            => MoveMade?.Invoke(X, Y);
+
         // returns whether the move was valid or not
+        public bool MakeMove((int X, int Y) Move)
+            => MakeMove(Move.X, Move.Y);
+
         public bool MakeMove(int X, int Y)
         {
             if (Finished || board[X, Y] != null || !validmoves.Contains((X, Y)))
@@ -105,6 +122,8 @@ namespace Reversi
                 Finished = true;
                 DetermineWinner();
             }
+
+            OnMoveMade(X, Y);
 
             return true;
         }
@@ -179,9 +198,9 @@ namespace Reversi
 
         public void PrintBoard()
         {
-            for (int X = 0; X < width; X++)
+            for (int Y = 0; Y < width; Y++)
             {
-                for (int Y = 0; Y < height; Y++)
+                for (int X = 0; X < height; X++)
                     Console.Write(board[X, Y] == true ? 'B' : board[X, Y] == false ? 'W' : '_');
                 Console.WriteLine();
             }
