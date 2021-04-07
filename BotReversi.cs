@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace Reversi
 {
@@ -36,8 +37,26 @@ namespace Reversi
             SubscribeToGame(Game);
         }
 
+        public BotReversi(BotReversi BotGame)
+        {
+            Board = (bool?[,])BotGame.Board.Clone();
+            ValidMoves = new List<(int X, int Y, Directions)>(BotGame.ValidMoves);
+            PotentialMoves = new HashSet<(int X, int Y)>(BotGame.PotentialMoves);
+            DarkDisks = BotGame.DarkDisks;
+            LightDisks = BotGame.LightDisks;
+            Turn = BotGame.Turn;
+            BoardWidth = BotGame.BoardWidth;
+            BoardHeight = BotGame.BoardHeight;
+            InnerBoardBottom = BotGame.InnerBoardBottom;
+            InnerBoardLeft = BotGame.InnerBoardLeft;
+            InnerBoardRight = BotGame.InnerBoardRight;
+            InnerBoardTop = BotGame.InnerBoardTop;
+        }
+
         public void SubscribeToGame(Reversi Game)
         {
+            PotentialMoves.Clear();
+
             if (this.Game != Game)
             {
                 if (this.Game != null)
@@ -148,26 +167,33 @@ namespace Reversi
             GetValidMoves();
         }
 
+        public BigInteger GetPosition()
+        {
+            BigInteger Position = 0, BaseValue = 1;
+            foreach (bool? cell in Board)
+            {
+                Position += BaseValue * (cell == null ? 0 : cell == true ? 1 : 2);
+                BaseValue *= 3;
+            }
+            Position += BaseValue * (Turn ? 0 : 1);
+            return Position;
+        }
+
+        public delegate void NotifyMoveMade(int MoveIndex);
+        public event NotifyMoveMade MoveMade;
+
         void OnMoveMade(int X, int Y)
-            => MakeMove(X, Y);
+        {
+            MakeMove(X, Y);
+        }
+
+        public delegate void NotifyGameReset();
+        public event NotifyGameReset GameReset;
 
         void OnGameReset()
-            => SubscribeToGame(Game);
-
-        public BotReversi(BotReversi BotGame)
         {
-            Board = (bool?[,])BotGame.Board.Clone();
-            ValidMoves = new List<(int X, int Y, Directions)>(BotGame.ValidMoves);
-            PotentialMoves = new HashSet<(int X, int Y)>(BotGame.PotentialMoves);
-            DarkDisks = BotGame.DarkDisks;
-            LightDisks = BotGame.LightDisks;
-            Turn = BotGame.Turn;
-            BoardWidth = BotGame.BoardWidth;
-            BoardHeight = BotGame.BoardHeight;
-            InnerBoardBottom = BotGame.InnerBoardBottom;
-            InnerBoardLeft = BotGame.InnerBoardLeft;
-            InnerBoardRight = BotGame.InnerBoardRight;
-            InnerBoardTop = BotGame.InnerBoardTop;
+            SubscribeToGame(Game);
+            GameReset?.Invoke();
         }
 
         bool CheckSquare(int x, int y)
@@ -192,7 +218,6 @@ namespace Reversi
             {
                 if (Board[X, Y] != null)
                     continue;
-
 
                 int x, y;
                 bool checkleft = X >= InnerBoardLeft,
@@ -329,27 +354,6 @@ namespace Reversi
                     MakeMove(i);
                     return;
                 }
-            Console.WriteLine("Actual");
-            for (int x = 0; x < BoardWidth; x++)
-            {
-                for (int y = 0; y < BoardHeight; y++)
-                {
-                    bool? cell = Game.Board[x, y];
-                    Console.Write(cell == true ? 'B' : cell == false ? 'W' : '_');
-                }
-                Console.WriteLine();
-            }
-            Console.WriteLine("Ours");
-            for (int x = 0; x < BoardWidth; x++)
-            {
-                for (int y = 0; y < BoardHeight; y++)
-                {
-                    bool? cell = Board[x, y];
-                    Console.Write(cell == true ? 'B' : cell == false ? 'W' : '_');
-                }
-                Console.WriteLine();
-            }
-
             throw new Exception("Tried to make an invalid move");
         }
 
@@ -357,7 +361,7 @@ namespace Reversi
         {
             if (ValidMoveIndex < 0 || ValidMoveIndex >= ValidMoves.Count)
                 throw new Exception("Tried to make an invalid move");
-
+            MoveMade?.Invoke(ValidMoveIndex);
             (int X, int Y, Directions dirs) = ValidMoves[ValidMoveIndex];
             PotentialMoves.Remove((X, Y));
             if (X > 0)
